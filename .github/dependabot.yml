@@ -5,6 +5,11 @@
 
 version: 2
 updates:
+  - package-ecosystem: "gomod" # See documentation for possible values
+    directory: "/backend-service" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
   - package-ecosystem: "gradle" # See documentation for possible values
     directory: "/middleware-server" # Location of package manifests
     schedule:
