@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+configMapGenerator:
+  - name: realm-settings
+    namespace: infrastructure
+    options:
+      disableNameSuffixHash: true
+    files:
+      - keycloak-realms.json
+resources:
+  - keycloak-helm-release.yaml

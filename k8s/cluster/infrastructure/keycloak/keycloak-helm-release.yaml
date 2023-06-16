@@ -1,0 +1,37 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: keycloak
+  namespace: infrastructure
+spec:
+  chart:
+    spec:
+      chart: keycloak
+      sourceRef:
+        name: bitnamicharts
+        namespace: infrastructure
+        kind: HelmRepository
+  interval: 10m
+  values:
+    extraStartupArgs: --features=admin-fine-grained-authz,token-exchange -Dkeycloak.import=/opt/keycloak/data/import/ -Dkeycloak.profile.feature.upload_scripts=enabled
+    auth:
+      adminUser: admin
+      adminPassword: admin
+    service:
+      type: NodePort
+      nodePorts:
+        http: 31001
+        https: 31002
+    ingress:
+      enabled: true
+      hostname: keycloak.infrastructure
+    extraVolumes:
+      - name: security-lab-realm-import
+        configMap:
+          name: realm-settings
+          items:
+            - key: keycloak-realms.json
+              path: keycloak-realms.json
+    extraVolumeMounts:
+      - mountPath: /opt/keycloak/data/import
+        name: security-lab-realm-import
