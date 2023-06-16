@@ -30,6 +30,18 @@ dependencies {
 }
 
 jib {
+    from {
+        platforms {
+            platform {
+                os = "linux"
+                architecture = "arm64"
+            }
+            platform {
+                os = "linux"
+                architecture = "amd64"
+            }
+        }
+    }
     to {
         image = "ghcr.io/$System.env.GITHUB_REPOSITORY_OWNER/seclab-middleware-server"
         tags = [version, "latest"]

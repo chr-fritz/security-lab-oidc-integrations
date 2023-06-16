@@ -1,4 +1,5 @@
 FROM scratch
-ADD backend-service /
-ENTRYPOINT /backend-service
+ARG TARGETARCH
+ADD --chmod=755 backend-service-$TARGETARCH /backend-service
+ENTRYPOINT ["/backend-service"]
 CMD []
