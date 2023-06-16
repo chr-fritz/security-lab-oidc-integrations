@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-service
+  namespace: services
+  labels:
+    app: backend-service
+spec:
+  selector:
+    matchLabels:
+      app: backend-service
+  template:
+    metadata:
+      labels:
+        app: backend-service
+    spec:
+      containers:
+        - name: backend-service
+          image: ghcr.io/chr-fritz/seclab-backend-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+              name: http
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              port: http
+              path: /health
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              port: http
+              path: /health
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              port: http
+              path: /health
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+            timeoutSeconds: 5
