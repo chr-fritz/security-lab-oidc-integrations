@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: middleware-server
+  namespace: services
+  labels:
+    app: middleware-server
+spec:
+  selector:
+    matchLabels:
+      app: middleware-server
+  template:
+    metadata:
+      labels:
+        app: middleware-server
+    spec:
+      containers:
+        - name: middleware-server
+          image: ghcr.io/chr-fritz/seclab-middleware-server:latest
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: /config/
+            - name: JAVA_TOOL_OPTIONS
+              value: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5005
+          startupProbe:
+            httpGet:
+              port: http
+              path: /actuator/health/readiness
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              port: http
+              path: /actuator/health/readiness
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              port: http
+              path: /actuator/health/liveness
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /config/
+              name: app-config
+      volumes:
+        - name: app-config
+          configMap:
+            name: middleware-server
+            defaultMode: 0444
+            items:
+              - key: application-k8s.yaml
+                path: application-k8s.yaml
+
