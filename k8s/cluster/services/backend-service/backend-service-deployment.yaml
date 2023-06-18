@@ -22,6 +22,11 @@ spec:
             - containerPort: 8081
               name: http-internal
               protocol: TCP
+          env:
+            - name: JWKS_URL
+              value: http://keycloak.infrastructure/realms/security-lab/protocol/openid-connect/certs
+            - name: ISSUER
+              value: http://keycloak.infrastructure/realms/security-lab
           startupProbe:
             httpGet:
               port: http-internal
@@ -58,7 +63,7 @@ spec:
             - --provider=oidc
             - --insecure-oidc-skip-issuer-verification
             - --skip-jwt-bearer-tokens
-            - --oidc-issuer-url=http://192.168.106.2:31001/realms/security-lab
+            - --oidc-issuer-url=http://keycloak.infrastructure/realms/security-lab
             - --oidc-jwks-url=http://keycloak.infrastructure/realms/security-lab/protocol/openid-connect/certs
             - --upstream=http://localhost:8081
           ports:
