@@ -9,4 +9,3 @@ public class MiddlewareServerApplication {
         SpringApplication.run(MiddlewareServerApplication.class, args);
     }
 }
-
