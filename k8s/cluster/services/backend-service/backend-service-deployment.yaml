@@ -20,11 +20,11 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
-              name: http
+              name: http-internal
               protocol: TCP
           startupProbe:
             httpGet:
-              port: http
+              port: http-internal
               path: /health
             periodSeconds: 5
             successThreshold: 1
@@ -32,7 +32,7 @@ spec:
             timeoutSeconds: 2
           readinessProbe:
             httpGet:
-              port: http
+              port: http-internal
               path: /health
             periodSeconds: 5
             successThreshold: 1
@@ -40,9 +40,53 @@ spec:
             timeoutSeconds: 2
           livenessProbe:
             httpGet:
-              port: http
+              port: http-internal
               path: /health
             periodSeconds: 5
             successThreshold: 1
             failureThreshold: 10
             timeoutSeconds: 5
+        - name: oauth-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:latest
+          args:
+            - --http-address=0.0.0.0:4180
+            - --client-id=backend-server-oauth-proxy
+            - --client-secret=eliyXBTtFNNc3OomZ3yPS1e56alfOgN9
+            - --code-challenge-method=S256
+            - --cookie-secret=cookie-secret@13
+            - --email-domain=*
+            - --provider=oidc
+            - --insecure-oidc-skip-issuer-verification
+            - --skip-jwt-bearer-tokens
+            - --oidc-issuer-url=http://192.168.106.2:31001/realms/security-lab
+            - --oidc-jwks-url=http://keycloak.infrastructure/realms/security-lab/protocol/openid-connect/certs
+            - --upstream=http://localhost:8081
+          ports:
+            - containerPort: 4180
+              name: http-external
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              port: http-external
+              path: /ping
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              port: http-external
+              path: /ping
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              port: http-external
+              path: /ping
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+            timeoutSeconds: 5
+
