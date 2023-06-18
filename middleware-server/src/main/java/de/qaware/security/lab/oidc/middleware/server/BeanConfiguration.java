@@ -16,7 +16,9 @@ public class BeanConfiguration {
     }
 
     @Bean
-    RestTemplate rest(HttpClient httpClient) {
-        return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
+    RestTemplate rest(HttpClient httpClient, TokenForwardHttpRequestInterceptor interceptor) {
+        RestTemplate rest = new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
+        rest.getInterceptors().add(interceptor);
+        return rest;
     }
 }

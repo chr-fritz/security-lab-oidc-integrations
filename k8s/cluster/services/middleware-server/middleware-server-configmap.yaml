@@ -10,3 +10,12 @@ data:
     hello:
       backend:
         url: http://backend-service.services/hello
+    spring:
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: http://keycloak.infrastructure/realms/security-lab
+              audiences:
+                - middleware-server
+              jwk-set-uri: http://keycloak.infrastructure/realms/security-lab/protocol/openid-connect/certs
