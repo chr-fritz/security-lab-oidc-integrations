@@ -22,6 +22,11 @@ spec:
             - containerPort: 8081
               name: http
               protocol: TCP
+          env:
+            - name: JWKS_URL
+              value: http://keycloak.infrastructure/realms/security-lab/protocol/openid-connect/certs
+            - name: ISSUER
+              value: http://keycloak.infrastructure/realms/security-lab
           startupProbe:
             httpGet:
               port: http
