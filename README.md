@@ -26,6 +26,14 @@ Setup mit Colima unter Intel Macs
 colima start -c 8 -m 8 --kubernetes --network-address
 ```
 
+Stop/Delete nach dem Workshop:
+
+```shell
+colima stop
+
+colima delete
+```
+
 ### Hostnamen eintragen
 
 Folgendene Hostnamen sollten in der `/etc/hosts` Datei eingetragen werden damit der Zugriff leichter funktioniert:
@@ -76,3 +84,7 @@ git commit -avm "Trigger CI builds noop"
 git push
 ```
 
+
+## Solution
+
+Branch [final-solution](https://github.com/chr-fritz/security-lab-oidc-integrations/tree/final-solution)
