@@ -1,18 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/MicahParks/keyfunc/v2"
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/sirupsen/logrus"
+	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
-	"time"
 )
 
-var jwks *keyfunc.JWKS
+var jwksFunc keyfunc.Keyfunc
 var mutex = sync.RWMutex{}
 var parser *jwt.Parser
 
@@ -27,7 +28,11 @@ type keycloakClaims struct {
 }
 
 func main() {
-	if err := updateJwks(); err != nil {
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+	var err error
+	jwksFunc, err = getJwksFunc(ctx)
+	if err != nil {
 		panic(err)
 	}
 	parser = jwt.NewParser(jwt.WithAudience("backend-service"), jwt.WithIssuer(os.Getenv("ISSUER")))
@@ -36,8 +41,16 @@ func main() {
 	mux.HandleFunc("/hello", hello)
 	mux.HandleFunc("/health", health)
 
-	if err := http.ListenAndServe(":8081", mux); err != nil {
-		logrus.Error(err)
+	srv := http.Server{
+		Addr:    ":8081",
+		Handler: mux,
+		BaseContext: func(listener net.Listener) context.Context {
+			return context.WithValue(ctx, "listenerAddr", listener.Addr())
+		},
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		slog.Warn("Error while handling http requests", "err", err)
 	}
 }
 
@@ -45,7 +58,7 @@ func hello(writer http.ResponseWriter, request *http.Request) {
 	token, err := validateAuthentication(request)
 	if err != nil || !token.Valid {
 		if err != nil {
-			logrus.Warnf("invalid authorization: %s", err)
+			slog.Warn("Can't validate authorization", "err", err)
 		}
 		writer.WriteHeader(403)
 		_, _ = writer.Write([]byte("invalid authorization"))
@@ -54,7 +67,7 @@ func hello(writer http.ResponseWriter, request *http.Request) {
 
 	claims, ok := token.Claims.(*keycloakClaims)
 	if !ok {
-		logrus.Error("unexpected claims")
+		slog.Error("Unexpected claims")
 		writer.WriteHeader(401)
 		_, _ = writer.Write([]byte("invalid authorization"))
 		return
@@ -80,29 +93,16 @@ func validateAuthentication(request *http.Request) (*jwt.Token, error) {
 	if strings.ToLower(parts[0]) != "bearer" {
 		return nil, fmt.Errorf("expecting bearer token, but not found")
 	}
-	return parser.ParseWithClaims(parts[1], &keycloakClaims{}, jwks.Keyfunc)
+	return parser.ParseWithClaims(parts[1], &keycloakClaims{}, jwksFunc.Keyfunc)
 }
 
-func updateJwks() error {
-	ticker := time.NewTicker(1 * time.Hour)
+func getJwksFunc(ctx context.Context) (keyfunc.Keyfunc, error) {
 	// Get the JWKS URL from an environment variable.
 	jwksURL := os.Getenv("JWKS_URL")
 
 	// Confirm the environment variable is not empty.
 	if jwksURL == "" {
-		return fmt.Errorf("JWKS_URL environment variable must be populated")
+		return nil, fmt.Errorf("JWKS_URL environment variable must be populated")
 	}
-	go func() {
-		for {
-			tmpJwks, err := keyfunc.Get(jwksURL, keyfunc.Options{}) // See recommended options in the examples directory.
-			if err != nil {
-				logrus.Errorf("failed to get the JWKS from the given URL.\nError: %s", err)
-			}
-			mutex.Lock()
-			jwks = tmpJwks
-			mutex.Unlock()
-			<-ticker.C
-		}
-	}()
-	return nil
+	return keyfunc.NewDefaultCtx(ctx, []string{jwksURL}) // See recommended options in the examples directory.
 }
