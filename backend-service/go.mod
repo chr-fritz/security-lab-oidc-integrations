@@ -3,7 +3,7 @@ module github.com/chr-fritz/security-lab-oidc-integrations/backend-service
 go 1.22.1
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.5.0
+	github.com/MicahParks/keyfunc/v3 v3.6.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
 )
 
