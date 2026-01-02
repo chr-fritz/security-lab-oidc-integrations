@@ -26,6 +26,14 @@ Setup mit Colima unter Intel Macs
 colima start -c 8 -m 8 --kubernetes --network-address
 ```
 
+Stop/Delete nach dem Workshop:
+
+```shell
+colima stop
+
+colima delete
+```
+
 ### Hostnamen eintragen
 
 Folgendene Hostnamen sollten in der `/etc/hosts` Datei eingetragen werden damit der Zugriff leichter funktioniert:
@@ -54,3 +62,29 @@ Anschließend dieses Repository Forken
 export GITHUB_TOKEN=<GH_ACCESS_TOKEN>
 flux bootstrap github --owner <OWN_GH_USER_NAME> --personal --repository security-lab-oidc-integrations --path k8s/cluster/ --branch main
 ```
+
+## Troubleshooting
+
+### Run GitHub Actions after fork
+
+Actions are triggered on push into the main branch. You can trigger this with a dummy commit change into the following paths:
+
+- [backend-service/](backend-service/) e.g. [backend-service/main.go](backend-service/main.go)
+- [middleware-server/](middleware-server/) e.g. [middleware-server/.gitignore](middleware-server/.gitignore)
+
+Commit and push the change.
+
+Example:
+
+```shell
+echo "\n" >> backend-service/main.go
+echo "\n" >> middleware-server/.gitignore
+
+git commit -avm "Trigger CI builds noop"
+git push
+```
+
+
+## Solution
+
+Branch [final-solution](https://github.com/chr-fritz/security-lab-oidc-integrations/tree/final-solution)
